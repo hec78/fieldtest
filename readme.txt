@@ -24,3 +24,4 @@ IMPLEMENTATION :
 * Modifier le controller webservice et remplacer {NOM DU COMPOSANT} par le nom de votre composant
 * Ajouter le CSS de jqueryUI si pas déjà présent dans le default.php de la vue utilisant ce champ
 	$doc->addStyleSheet("//code.jquery.com/ui/1.11.3/themes/smoothness/jquery-ui.css");
+
