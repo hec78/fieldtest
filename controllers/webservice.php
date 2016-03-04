@@ -83,11 +83,13 @@ class FieldTestControllerWebservice extends FieldTestController
 			
 			$showfiles=($mode & 1)!=0;
 			$showfolders=($mode & 2)!=0;
-			
-			$filterarr=explode("|", $filter);
-			$filter=array();
-			foreach($filterarr as $f)
-				$filter[$f]=$f;
+			if ($filter)
+			{
+				$filterarr=explode("|", $filter);
+				$filter=array();
+				foreach($filterarr as $f)
+					$filter[$f]=$f;
+			}
 			$excludearr=explode("|", $exclude);
 				$exclude_files=array();
 				$exclude_ext=array();

@@ -97,7 +97,11 @@ class JFormFieldFileXplorer extends JFormField
 			else
 				$langfile=$component_path."/libraries/datatables/lang-default.json";
 		$lang->load("jformfield_filexplorer",JPATH_COMPONENT."/models/fields/filexplorer",$lang->getTag(),true);
-				
+		// Control taille fichier uploade
+		$upload_max_size = ini_get('upload_max_filesize');
+		$post_max_size= ini_get('post_max_size');
+		if ($post_max_size<$upload_max_size) $upload_max_size=$post_max_size;		
+		$upload_max_size=$this->toByteSize($upload_max_size);		
 				
 		if (!self::$initialised)
 		{
@@ -184,7 +188,8 @@ class JFormFieldFileXplorer extends JFormField
 			$script[]="    newrow.node().addClass(cls);";
 			$script[]="}";
 			$script[]="function jformfieldfilexplorer_dbclick(id,row) {";
-			$script[]="    var name=row.cells[1].innerText;";
+			// Correction pour FF : $script[]="    var name=row.cells[1].innerText;";
+			$script[]="    var name=row.cells[1].textContent;";
 			$script[]="    var curdir=jformfieldfilexplorer_curdir[id];";
 			$script[]="    var rootdir=jformfieldfilexplorer_rootdir[id];";
 			$script[]="    if(row.hasClass('directory')){";
@@ -203,9 +208,12 @@ class JFormFieldFileXplorer extends JFormField
 			$script[]="        var a=document.getElementById(id+'_link');a.href='".JUri::base(true)."'+filename;a.click();";
 			$script[]="    }";
 			$script[]="}";
-			$script[]="function jformfieldfilexplorer_errorBox(id,text) {";
+			$script[]="function jformfieldfilexplorer_errorBox(id,text, width,height) {";
+			$script[]="    width = typeof width !== 'undefined' ? width : 300;";
+			$script[]="    height = typeof height !== 'undefined' ? height : 200;";
+			$script[]="    jQuery('.jformfieldfilexplorer_errormsgbox .content').height(height-90);";
 			$script[]="    jQuery('#'+id+'_ErrorMessage .content').html(text);";
-			$script[]="    jQuery('#'+id+'_ErrorMessage').dialog({resizable: false, height:150,width : 300,modal: true, draggable: true});";
+			$script[]="    jQuery('#'+id+'_ErrorMessage').dialog({resizable: false, height:height,width : width,modal: true, draggable: true});";
 			$script[]="}";
 			$script[]="function jformfieldfilexplorer_preview(id,filename) {";
 			$script[]="    if (filename=='') {";
@@ -303,13 +311,20 @@ class JFormFieldFileXplorer extends JFormField
 			$script[]="        dlg.dialog({resizable: false, height:400,width : 500,modal: false, draggable: true});";
 			$script[]="    } else { var message=jQuery('#'+id+'_uploadDialogMessage');}";
 			$script[]="    for (var i = 0; i < files.length; i++) {";
-        	$script[]="        var fd = new FormData();fd.append('uploadedfiles[]', files[i], files[i].name);";
- 			$script[]="        var status = new jformfieldfilexplorer_createStatusbar(jQuery(container)); ";
-        	$script[]="        status.setFileNameSize(files[i].name,files[i].size);";
-        	$script[]="	       jformfieldfilexplorer_uploadFile(id, fd,status);";
+			$script[]="        if(files[i].size>".$upload_max_size.") {";
+			$script[]="            var message='".JText::_('JFORMFIELD_FILEXPLORER_FILETOOBIG')."';";
+			$script[]="            message=message.replace('{filename}', files[i].name);";
+			$script[]="            message=message.replace('{size}', files[i].size);";
+			$script[]="            message=message.replace('{limit}', '".$upload_max_size."');";
+			$script[]="            jformfieldfilexplorer_errorBox(id,message,500,250);";
+			$script[]="        } else {";
+        	$script[]="            var fd = new FormData();fd.append('uploadedfiles[]', files[i], files[i].name);";
+ 			$script[]="            var status = new jformfieldfilexplorer_createStatusbar(jQuery(container)); ";
+        	$script[]="            status.setFileNameSize(files[i].name,files[i].size);";
+        	$script[]="	           jformfieldfilexplorer_uploadFile(id, fd,status);";
+			$script[]="        }";
  			$script[]="    }";
- 			$script[]="    message.html('Envoi termine');";
-			$script[]="}";
+ 			$script[]="}";
         	$script[]="function jformfieldfilexplorer_uploadFile(id, formData,status) {";
 			$script[]="    var curdir=jformfieldfilexplorer_curdir[id];";
 			$script[]="    var rootdir=jformfieldfilexplorer_rootdir[id];";
@@ -518,7 +533,8 @@ class JFormFieldFileXplorer extends JFormField
 			$css[]=".jformfieldfilexplorer_msgbox buttons { margin-top:20px; }";
 			$css[]=".jformfieldfilexplorer_msgbox_edit { width:90%; }";
 			$css[]=".dataTables_wrapper .even { background-color:rgb(230,230,230);}";
-			$css[]=".jformfieldfilexplorer_errormsgbox .content { min-height:70px; }";
+			$css[]=".jformfieldfilexplorer_errormsgbox .content { min-height:70px; height:95%}";
+			$css[]=".jformfieldfilexplorer_errormsgbox .button { position:absolute;bottom:0px; }";
 			$doc->addStyleDeclaration(implode("", $css));	
 			
 			self::$initialised = true;
