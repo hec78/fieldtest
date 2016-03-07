@@ -1,10 +1,10 @@
 <?php
 /**
- * @version     1.0.0
- * @package     com_kwpmessage
- * @copyright   Copyright (C) 2014. Tous droits réservés.
+ * @version     1.0.1
+ * @package     JFormFieldFileXPlorer
+ * @copyright   Copyright (C) 2016. Hervé CYR Tous droits réservés.
  * @license     GNU General Public License version 2 ou version ultérieure ; Voir LICENSE.txt
- * @author      Hervé CYR <herve.cyr@kantarworldpanel.com> - 
+ * @author      Hervé CYR <herve.cyr@laposte.net> - 
  */
 
 defined('JPATH_BASE') or die;
@@ -73,6 +73,91 @@ class JFormFieldFileXplorer extends JFormField
 		$searching=$this->getAttribute("searching","false");
 		$ordering=$this->getAttribute("ordering","true");
 		$class=$this->getAttribute("class","jformfieldfilexplorer");
+		
+		$authorized_features=explode(",", $authorized_features);
+		$this->canUpload=false;$this->canDownload=true;
+		$this->canRemoveFile=false;$this->canRemoveDir=false;
+		$this->canRenameFile=false;$this->canRenameDir=false;
+		$this->canRemove=false;	$this->canRename=false;
+		$this->canPreview=true;$this->canCreateDir=false;
+		foreach ($authorized_features as $feature )
+		{
+			switch (trim(strtolower($feature)))
+			{
+				case "createdir":
+					$this->canCreateDir=true;
+					break;
+				case "nocreatedir":
+					$this->canCreateDir=false;
+					break;
+				case "upload":
+					$this->canUpload=true;
+					break;
+				case "noupload":
+					$this->canUpload=false;
+					break;
+				case "download":
+					$this->canDownload=true;
+					break;
+				case "nodownload":
+					$this->canDownload=false;
+					break;
+				case "removefile":
+					$this->canRemoveFile=true;
+					break;
+				case "noremovefile":
+					$this->canRemoveFile=false;
+					break;
+				case "renamefile":
+					$this->canRenameFile=true;
+					break;
+				case "norenamefile":
+					$this->canRenameFile=false;
+					break;
+				case "remove":
+					$this->canRemove=true;
+					break;
+				case "noremove":
+					$this->canRemove=false;
+					break;
+				case "rename":
+					$this->canRename=true;
+					break;
+				case "norename":
+					$this->canRename=false;
+					break;
+				case "renamefile":
+					$this->canRenameFile=true;
+					break;
+				case "norenamefile":
+					$this->canRenameFile=false;
+					break;
+				case "removedir":
+				case "removefolder":
+					$this->canRemoveDir=true;
+					break;
+				case "noremovedir":
+				case "noremovefolder":
+					$this->canRemoveDir=false;
+					break;
+				case "renamedir":
+				case "renamefolder":
+					$this->canRenamedir=true;
+					break;
+				case "norenamedir":
+				case "norenamefolder":
+					$this->canRenameDir=false;
+					break;
+				case "preview":
+					$this->canPreview=true;
+					break;
+				case "nopreview":
+					$this->canPreview=false;
+					break;
+			}
+		}
+		
+		
 		
 		$height=$this->getAttribute("height","300px");
 		$width=$this->getAttribute("width","100%");
@@ -303,27 +388,31 @@ class JFormFieldFileXplorer extends JFormField
 			$script[]="}";
 			
 			$script[]="function jformfieldfilexplorer_uploadFiles(id, files, container, dlg) {";
-			$script[]="    if (jformfieldfilexplorer_readonly[id]) return;";
-			$script[]="    if (dlg===undefined){";
-			$script[]="        var dlg = jQuery('<div></div>');var container=dlg;";
-			$script[]="        var container=jQuery('<div></div>');dlg.append(container);";
-			$script[]="        var message=jQuery('<div></div>');dlg.append(message);";
-			$script[]="        dlg.dialog({resizable: false, height:400,width : 500,modal: false, draggable: true});";
-			$script[]="    } else { var message=jQuery('#'+id+'_uploadDialogMessage');}";
-			$script[]="    for (var i = 0; i < files.length; i++) {";
-			$script[]="        if(files[i].size>".$upload_max_size.") {";
-			$script[]="            var message='".JText::_('JFORMFIELD_FILEXPLORER_FILETOOBIG')."';";
-			$script[]="            message=message.replace('{filename}', files[i].name);";
-			$script[]="            message=message.replace('{size}', files[i].size);";
-			$script[]="            message=message.replace('{limit}', '".$upload_max_size."');";
-			$script[]="            jformfieldfilexplorer_errorBox(id,message,500,250);";
-			$script[]="        } else {";
-        	$script[]="            var fd = new FormData();fd.append('uploadedfiles[]', files[i], files[i].name);";
- 			$script[]="            var status = new jformfieldfilexplorer_createStatusbar(jQuery(container)); ";
-        	$script[]="            status.setFileNameSize(files[i].name,files[i].size);";
-        	$script[]="	           jformfieldfilexplorer_uploadFile(id, fd,status);";
-			$script[]="        }";
- 			$script[]="    }";
+			if (!$this->canUpload) {
+				$script[]="    jformfieldfilexplorer_errorBox(id,'".JText::_('JFORMFIELD_FILEXPLORER_CANTUPLOAD')."',300,180);";
+			} else {
+				$script[]="    if (jformfieldfilexplorer_readonly[id]) return;";
+				$script[]="    if (dlg===undefined){";
+				$script[]="        var dlg = jQuery('<div></div>');var container=dlg;";
+				$script[]="        var container=jQuery('<div></div>');dlg.append(container);";
+				$script[]="        var message=jQuery('<div></div>');dlg.append(message);";
+				$script[]="        dlg.dialog({resizable: false, height:400,width : 500,modal: false, draggable: true});";
+				$script[]="    } else { var message=jQuery('#'+id+'_uploadDialogMessage');}";
+				$script[]="    for (var i = 0; i < files.length; i++) {";
+				$script[]="        if(files[i].size>".$upload_max_size.") {";
+				$script[]="            var message='".JText::_('JFORMFIELD_FILEXPLORER_FILETOOBIG')."';";
+				$script[]="            message=message.replace('{filename}', files[i].name);";
+				$script[]="            message=message.replace('{size}', files[i].size);";
+				$script[]="            message=message.replace('{limit}', '".$upload_max_size."');";
+				$script[]="            jformfieldfilexplorer_errorBox(id,message,500,250);";
+				$script[]="        } else {";
+				$script[]="            var fd = new FormData();fd.append('uploadedfiles[]', files[i], files[i].name);";
+				$script[]="            var status = new jformfieldfilexplorer_createStatusbar(jQuery(container)); ";
+				$script[]="            status.setFileNameSize(files[i].name,files[i].size);";
+				$script[]="	           jformfieldfilexplorer_uploadFile(id, fd,status);";
+				$script[]="        }";
+				$script[]="    }";
+			}
  			$script[]="}";
         	$script[]="function jformfieldfilexplorer_uploadFile(id, formData,status) {";
 			$script[]="    var curdir=jformfieldfilexplorer_curdir[id];";
@@ -603,10 +692,10 @@ class JFormFieldFileXplorer extends JFormField
    		$html[]="        <div id=\"".$this->id."_toolbarbutton\" class=\"jformfieldfilexplorer_toolbarbutton\" ><div class=\"left-side\">";
    		
    		if (!$this->readonly) {
-   		$html[]="            <button disabled='disabled' class=\"jformfieldfilexplorer_itemoperation\" onclick=\"javascript:jformfieldfilexplorer_openRemoveDialog('".$this->id."');return false;\"><span class=\"icon-delete\" title=\"".JText::_('JFORMFIELD_FILEXPLORER_REMOVEFILE_TOOLTIP')."\"></span></button>";
-   		$html[]="            <button disabled='disabled' class=\"jformfieldfilexplorer_itemoperation\" onclick=\"javascript:jformfieldfilexplorer_openRenameDialog('".$this->id."');return false;\"><span class=\"icon-edit\" title=\"".JText::_('JFORMFIELD_FILEXPLORER_RENAMEFILE_TOOLTIP')."\"></span></button>";
-   		$html[]="            <button disabled='disabled' class=\"jformfieldfilexplorer_directoryoperation\" onclick=\"javascript:jformfieldfilexplorer_openUploadDialog('".$this->id."');return false;\"><span class=\"icon-upload\" title=\"".JText::_('JFORMFIELD_FILEXPLORER_UPLOADFILE_TOOLTIP')."\"></span></button>";
-   		$html[]="            <button disabled='disabled' class=\"jformfieldfilexplorer_directoryoperation\" onclick=\"jformfieldfilexplorer_showCreateDirectory('".$this->id."');return false;\"><span class=\"icon-new\" title=\"".JText::_('JFORMFIELD_FILEXPLORER_CREATENEWDIR_TOOLTIP')."\"></span></button>";
+			if ($this->canRemove) { $html[]="            <button disabled='disabled' class=\"jformfieldfilexplorer_itemoperation\" onclick=\"javascript:jformfieldfilexplorer_openRemoveDialog('".$this->id."');return false;\"><span class=\"icon-delete\" title=\"".JText::_('JFORMFIELD_FILEXPLORER_REMOVEFILE_TOOLTIP')."\"></span></button>"; }
+   			if ($this->canRename) { $html[]="            <button disabled='disabled' class=\"jformfieldfilexplorer_itemoperation\" onclick=\"javascript:jformfieldfilexplorer_openRenameDialog('".$this->id."');return false;\"><span class=\"icon-edit\" title=\"".JText::_('JFORMFIELD_FILEXPLORER_RENAMEFILE_TOOLTIP')."\"></span></button>";}
+   			if ($this->canUpload) { $html[]="            <button disabled='disabled' class=\"jformfieldfilexplorer_directoryoperation\" onclick=\"javascript:jformfieldfilexplorer_openUploadDialog('".$this->id."');return false;\"><span class=\"icon-upload\" title=\"".JText::_('JFORMFIELD_FILEXPLORER_UPLOADFILE_TOOLTIP')."\"></span></button>"; }
+			if ($this->canCreateDir) { $html[]="            <button disabled='disabled' class=\"jformfieldfilexplorer_directoryoperation\" onclick=\"jformfieldfilexplorer_showCreateDirectory('".$this->id."');return false;\"><span class=\"icon-new\" title=\"".JText::_('JFORMFIELD_FILEXPLORER_CREATENEWDIR_TOOLTIP')."\"></span></button>"; }
    		}
    		$html[]="            <button disabled='disabled' class=\"jformfieldfilexplorer_itemoperation\" onclick=\"jformfieldfilexplorer_preview('".$this->id."','');return false;\"><span class=\"icon-eye\" title=\"".JText::_('JFORMFIELD_FILEXPLORER_PREVIEW_TOOLTIP')."\"></span></button>";
    		$html[]="            </div><div class=\"right-side\">";
