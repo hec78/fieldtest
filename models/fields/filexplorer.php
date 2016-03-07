@@ -549,14 +549,14 @@ class JFormFieldFileXplorer extends JFormField
 		$html[]="<div id=\"".$this->id."_uploadDialog\" class=\"jformfieldfilexplorer_msgbox\" title=\"".JText::_('JFORMFIELD_FILEXPLORER_UPLOAD_TITLE')."\">";
 		$html[]="  <div id=\"".$this->id."_uploadDialogMessage\" ></div>";
 		$html[]="  <fieldset><legend>".JText::_('JFORMFIELD_FILEXPLORER_UPLOAD_LEGEND')."</legend>";
-    	$html[]="    <form id=\"".$this->id."_fileform\" action=\"".$uploadurl."\" method=\"POST\" ENCTYPE=\"multipart/form-data\">";
+    	//$html[]="    <form id=\"".$this->id."_fileform\" action=\"".$uploadurl."\" method=\"POST\" ENCTYPE=\"multipart/form-data\">";
     	$html[]="      <input type=\"file\" id=\"".$this->id."_uploadfileselect\" name=\"".$this->id."_uploadfileselect[]\" multiple style=\"100%\" />";
     	$html[]="      <button onclick=\"javascript:jformfieldfilexplorer_uploadFiles('".$this->id."', document.getElementById('".$this->id."_uploadfileselect').files,'#".$this->id."_uploadProgressDialog', jQuery('#".$this->id."_uploadDialog'));return false;\">";
     	$html[]="      <span class=\"icon-upload\"></span> ".JText::_('JFORMFIELD_FILEXPLORER_UPLOAD_SEND')."</button>";
     	$html[]="      <div id=\"".$this->id."_uploadProgressDialog\" class=\"jformfieldfilexplorer_uploadProgress\" ></div>";
     	$html[]="      <div class=\"jformfieldfilexplorer_draguploadinfo\">".JText::_("JFORMFIELD_FILEXPLORER_DRAGUPLOAD_TEXT")."</div>";
     	$html[]="      <div class=\"center\" style=\"width:100%;text-align:center;margin-top:10px;\" ><button onclick=\"javascript:jQuery('#".$this->id."_uploadDialog').dialog('close');return false;\"><span class=\"icon-cancel\"></span> ".JText::_('JFORMFIELD_FILEXPLORER_CLOSE')."</button></div>";
-    	$html[]="    </form>";
+    	//$html[]="    </form>";
     	$html[]="  </fieldset>";
 		$html[]="</div>";
 		$html[]="<div id=\"".$this->id."_confirmeRemoveFile\" class=\"jformfieldfilexplorer_msgbox\" title=\"".JText::_('JFORMFIELD_FILEXPLORER_DELETE_FILE_TITLE')."\">";
@@ -674,6 +674,21 @@ class JFormFieldFileXplorer extends JFormField
         return implode("\n",$html);
 	}
 	
+	function toByteSize($val) {
+		$val = trim($val);
+		$last = strtolower($val[strlen($val)-1]);
+		switch($last) {
+			// The 'G' modifier is available since PHP 5.1.0
+			case 'g':
+				$val *= 1024*1024*1024;
+			case 'm':
+				$val *= 1024*1024;
+			case 'k':
+				$val *= 1024;
+		}
+	
+		return $val;
+	}
 	/**
 	 * Wrapper method for getting attributes from the form element
 	 *
